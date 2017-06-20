@@ -543,8 +543,6 @@ static int regex_init() {
     
 	return 0;
 
-error3:
-	regfree(&group_re);
 error2:
 	regfree(&user_re);
 error1:
