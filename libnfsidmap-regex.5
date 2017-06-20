@@ -1,0 +1,131 @@
+.\"
+.\" libnfsidmap-regex(5)
+.\"
+.\" COPYRIGHT (c) 2017
+.\" ETH Zurich
+.\" ALL RIGHTS RESERVED
+.\" 
+.TH libnfsidmap-regex 5 "29 May 2017"
+.SH NAME
+regex \- libnfsidmap plugin using regex based mapping
+.SH SYNOPSIS
+Plugin for libnfsidmap.  Uses regex to map NFSv4 name to and from ids.
+.SH DESCRIPTION
+The
+.B regex
+plugin parses NFSv4 user and groups names using regex to extract the local user or group. NFSv4 names are created by adding constant strings before and after the local user and group names.
+
+It additionally supports an additional configuration file for static group mappings.
+
+.SH CONFIGURATION 
+The configuration for the plugin is in a new [Regex] section in
+.I /etc/idmapd.conf
+that may contain lines of the form
+
+.nf
+  variable = value
+.fi
+
+The recognized variables are as follows:
+.SS "[Regex] section variables"
+.nf
+
+
+.fi
+.TP
+.B User-Regex
+Regular expression that extracts the local user name from an NFSv4 name. Several expressions can be concatenated with '|'. The first match will be used.
+.TP
+.B Group-Regex
+Regular expression that extracts the local group name from an NFSv4 name. Several expressions can be concatenated with '|'. The first match will be used.
+.TP
+.B Prepend-Before-User
+Constant string to put before a local user name when building an NFSv4 name.
+
+(Default: none)
+.TP
+.B Append-After-User
+Constant string to put after a local user name when building an NFSv4 name.
+
+(Default: none)
+.TP
+.B Prepend-Before-Group
+Constant string to put before a local group name when building an NFSv4 name.
+
+(Default: none)
+.TP
+.B Append-After-Group
+Constant string to put before a local group name when building an NFSv4 name.
+
+(Default: none)
+.TP
+.B Group-Name-Prefix
+Constant string that is prepended to a local group name when converting it to an NFSv4 name. If an NFSv4 group name has this prefix it is removed when converting it to a local group name. IS not applied if a static group mapping matches.
+
+This allows to organize the group name space in a central directory that is used for a central NFS4 server and use short group names in the local directory used in organizational units.
+.TP
+.B Group-Map-File
+File name of an INI style file containing static group mappings.
+
+(Default: /etc/idmapd.conf)
+.TP
+.B Group-Map-Section
+Section in the static group mapping file that contains the mappings. The name must be all lower case. The section name in the file is case sensitive.
+
+(Default: groups)
+.nf
+
+.SH STATIC MAPPING
+The 
+.B Group-Map-File
+and 
+.B Group-Map-Section 
+variables can be used to define a section containing mappings of the form
+
+.nf
+  nfs4 group = local group
+.fi
+
+The default is to have a 
+.B  [Groups]
+section in the
+.I /etc/idmapd.conf
+file.
+
+For both the NFS4 and local group name the
+.B Group-Name-Prefix
+prefix is not applied or removed.
+.nf
+
+.SH EXAMPLES
+An example
+.B [Regex]
+and
+.B [Groups]
+section in the
+.I /etc/idmapd.conf
+file:
+.nf
+
+[Regex]
+User-Regex = ^EXAMPLE\\([^@]+)@EXAMPLE.ORG$
+Group-Regex = ^([^@]+)@EXAMPLE.ORG@EXAMPLE.ORG$|^EXAMPLE\\([^@]+)@EXAMPLE.ORG$
+Prepend-Before-User = EXAMPLE\
+Append-After-User = @EXAMPLE.ORG
+#Prepend-Before-Group = 
+Append-After-Group = @example.org@example.org
+Group-Name-Prefix = sales-
+
+[Groups]
+domain users = users
+.fi
+.SH SEE ALSO
+.BR idmapd.conf (5)
+.\".SH COMPATIBILITY
+.\".SH STANDARDS
+.\".SH ACKNOWLEDGEMENTS
+.\".SH AUTHORS
+.\".SH HISTORY
+.SH BUGS
+Report bugs to <stefan.walter@inf.ethz.ch>
+.\".SH CAVEATS
