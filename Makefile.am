@@ -9,7 +9,7 @@ regex_la_LIBADD = -lnfsidmap -liniparser
 
 man5_MANS       = libnfsidmap-regex.5
 
-EXTRA_DIST = $(man5_MANS) 
+EXTRA_DIST = $(man5_MANS) nfsidmap_internal.h
 
 pkgconfigdir=$(libdir)/pkgconfig
 
