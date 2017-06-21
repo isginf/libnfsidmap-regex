@@ -4,7 +4,8 @@ Release:        1
 License:        BSD
 Url:            https://github.com/isginf/libnfsidmap-regex
 BuildRequires:  coreutils
-Requires:       coreutils
+BuildRequires:  iniparser-devel
+Requires:       iniparser
 Summary:        libnfsidmap plugin using regex based mapping
 Source:         libnfsidmap-regex-0.1.tar.gz
 
@@ -31,3 +32,6 @@ cp libnfsidmap-regex.5.gz %{buildroot}/usr/share/man/man5/
 /usr/share/man/man5/libnfsidmap-regex.5.gz
 
 %changelog
+* Tue Jun 20 2017 stefan.walter@inf.ethz.ch
+- First initial package for linux.
+
