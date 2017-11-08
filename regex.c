@@ -42,14 +42,16 @@
 #include <errno.h>
 #include <err.h>
 #include <regex.h>
-#include <iniparser.h>
+#include <ini_configobj.h>
 
 #include "nfsidmap.h"
 #include "nfsidmap_internal.h"
 
 #define MAX_MATCHES 100
 
-dictionary * dict;
+struct ini_cfgfile *  dict_file;
+struct ini_cfgobj * dict;
+
 regex_t group_re;
 regex_t user_re;
 char * group_prefix;
@@ -168,13 +170,14 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
 	struct grbuf *buf;
 	size_t buflen = sysconf(_SC_GETGR_R_SIZE_MAX);
 	char *localgroup;
-    char * groupname;
-    char * staticgroup;
+    char *staticgroup;
+    char *groupname;
     size_t namelen;
 	int err;
 	int index;
     int status;
     regmatch_t matches[MAX_MATCHES];
+    struct value_obj * vo;
 
 	buf = malloc(sizeof(*buf) + buflen);
 	if (!buf) {
@@ -213,38 +216,20 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
 
 	IDMAP_LOG(4, ("regexp_getgrnam: group '%s' after match of regex", localgroup));
 
-    groupname = malloc(namelen + strlen(group_map_section) + 1 + 1);
-    if (!groupname)
-	{
-        err = ENOMEM;
-        goto err_free_name;
-    }
-	strcpy(groupname, group_map_section);
-	strcat(groupname, ":");
-	strcat(groupname, localgroup);
-     
-	IDMAP_LOG(4, ("regexp_getgrnam: check for static group mapping of '%s'", groupname));
-
-    staticgroup = iniparser_getstring(dict, groupname, NULL);
-    free(groupname);
-    groupname = localgroup;
+    if (ini_get_config_valueobj(group_map_section, localgroup, dict,  INI_GET_FIRST_VALUE, &vo))
+       goto err_free_buf;
+    staticgroup = ini_get_string_config_value(vo, NULL);
 
     if (staticgroup)
     {
         IDMAP_LOG(4, ("regexp_getgrnam: group '%s' matched static group '%s'", localgroup, staticgroup));
 
         free(localgroup);
-        localgroup = malloc(strlen(staticgroup));
-	    if (!localgroup)
-    	{
-			err = ENOMEM;
-			goto err_free_buf;
-    	}
-
-        strcpy(localgroup, staticgroup);
+        groupname = localgroup = staticgroup;
     }
     else
     {
+        groupname = localgroup;
     	if (group_name_prefix_length && ! strncmp(group_name_prefix, localgroup, group_name_prefix_length))
 		{
         	IDMAP_LOG(4, ("regexp_getgrnam: removing prefix '%s' (%d long) from group '%s'", group_name_prefix, group_name_prefix_length, localgroup));
@@ -272,6 +257,8 @@ again:
 
 	IDMAP_LOG(4, ("regex_getgrnam: group '%s' mapped to '%s'",
 		  name, groupname));
+
+    free(localgroup);
 
 	*err_p = 0;
 	return gr;
@@ -412,6 +399,7 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
     char ** keys;
     char * value;
     char * groupname = NULL;
+    struct value_obj * vo;
 
 	do {
 		err = -ENOMEM;
@@ -430,19 +418,23 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
 	if (err)
 		goto out_buf;
 
-    count = iniparser_getsecnkeys(dict,group_map_section);
-    keys = iniparser_getseckeys(dict,group_map_section);
+    keys = ini_get_attribute_list(dict, group_map_section, &count, &err);
+    if (err)
+        goto out_buf;
 
-    
     for (index = 0; index < count; index++)
     {
-       value = iniparser_getstring(dict, keys[index], NULL);
-       if (value != NULL && ! strcmp(gr->gr_name,value) )
-       {
-   			groupname = keys[index] + strlen(group_map_section) + 1;
+        if (ini_get_config_valueobj(group_map_section, keys[index], dict,  INI_GET_FIRST_VALUE, &vo))
+            goto out_ini;
+        value = ini_get_string_config_value(vo, NULL);
+        if (value != NULL && ! strcmp(gr->gr_name,value) )
+        {
+            free(value);
+   			groupname = keys[index];
    			IDMAP_LOG(4, ("regex_gid_to_name: match '%s' -> '%s'", gr->gr_name, groupname));
             break;
-       }
+        }
+        free(value);
     } 
     
     if (groupname)
@@ -458,6 +450,9 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
 	}
       
 	err = write_name(name, groupname, name_prefix, group_prefix, group_suffix, len);
+
+out_ini:
+    ini_free_attribute_list(keys);
 out_buf:
 	free(buf);
 out:
@@ -539,10 +534,19 @@ static int regex_init() {
         group_map_section = conf_section;
     }
 
-    dict = iniparser_load(group_map_file);
-    
+    if (ini_config_create(&dict))
+        goto error2;
+    if (ini_config_file_open(group_map_file, 0, &dict_file))
+        goto error3;
+    if (ini_config_parse(dict_file, INI_STOP_ON_ERROR, INI_MV1S_ALLOW, 0, dict))
+        goto error4;
+ 
 	return 0;
 
+error4:
+    ini_config_file_destroy(dict_file);
+error3:
+    ini_config_destroy(dict);
 error2:
 	regfree(&user_re);
 error1:
