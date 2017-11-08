@@ -140,7 +140,7 @@ again:
 		if (err == 0)
 			err = ENOENT;
 
-		IDMAP_LOG(0, ("regex_getpwnam: local user '%s' for '%s' not found",
+		IDMAP_LOG(4, ("regex_getpwnam: local user '%s' for '%s' not found",
 		  localname, name));
 
 		goto err_free_name;
@@ -264,7 +264,7 @@ again:
 		if (err == 0)
 			err = ENOENT;
 
-		IDMAP_LOG(0, ("regex_getgrnam: local group '%s' for '%s' not found",
+		IDMAP_LOG(4, ("regex_getgrnam: local group '%s' for '%s' not found",
 			  groupname, name));
 
 		goto err_free_name;
