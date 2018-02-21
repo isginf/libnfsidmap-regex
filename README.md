@@ -6,8 +6,8 @@ Plugin for libnfsidmap.  Uses regex to map NFSv4 name to and from ids.
 
 ## DESCRIPTION
 The  regex  plugin  parses  NFSv4  user and groups names using regex to
-extract the local user or group. NFSv4 names are created by adding con‐
-stant strings before and after the local user and group names.
+extract the local user or group. NFSv4 names are created by adding constant
+strings before and after the local user and group names.
 
 It  additionally  supports  an additional configuration file for static
 group mappings.
@@ -60,7 +60,7 @@ an NFSv4 name.
 Constant  string  that  is  prepended to a local group name when
 converting it to an NFSv4 name. If an NFSv4 group name has  this
 prefix  it  is removed when converting it to a local group name.
-IS not applied if a static group mapping matches.
+Is not applied if a static group mapping matches.
 
 This allows to organize the group name space in a central directory
 that is used for a central NFS4 server and use short group
@@ -72,8 +72,8 @@ File name of an INI style file containing static group mappings.
 (Default: /etc/idmapd.conf)
 
 #### Group-Map-Section
-Section in the static group mapping file that contains the  map‐
-pings.  The name must be all lower case. The section name in the
+Section in the static group mapping file that contains the  mappings.
+The name must be all lower case. The section name in the
 file is case sensitive.
 
 (Default: groups)
