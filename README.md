@@ -2,7 +2,7 @@
 regex - libnfsidmap plugin using regex based mapping
 
 ## SYNOPSIS
-Plugin for libnfsidmap.  Uses regex to map NFSv4 name to and from ids.
+Plugin for libnfsidmap.  Uses regex to map NFSv4 names to and from ids.
 
 ## DESCRIPTION
 The  regex  plugin  parses  NFSv4  user and groups names using regex to
@@ -95,7 +95,8 @@ An example `[Regex]` and `[Groups]` section in the `/etc/idmapd.conf` file:
        [Regex]
        User-Regex = ^EXAMPLE\([^@]+)@EXAMPLE.ORG$
        Group-Regex = ^([^@]+)@EXAMPLE.ORG@EXAMPLE.ORG$|^EXAMPLE\([^@]+)@EXAMPLE.ORG$
-       Prepend-Before-User = EXAMPLEAppend-After-User = @EXAMPLE.ORG
+       Prepend-Before-User = EXAMPLE
+       Append-After-User = @EXAMPLE.ORG
        #Prepend-Before-Group =
        Append-After-Group = @example.org@example.org
        Group-Name-Prefix = sales-
