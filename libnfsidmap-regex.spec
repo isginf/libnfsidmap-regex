@@ -6,6 +6,11 @@ Version:        %{build_timestamp}
 Release:        1
 License:        BSD
 Url:            https://github.com/isginf/libnfsidmap-regex
+%if 0%{?rhel} == 6
+BuildRequires:  nfs-utils-lib-devel
+%else
+BuildRequires:  libnfsidmap-devel
+%endif
 BuildRequires:  coreutils git
 BuildRequires:  libtool automake autoconf
 BuildRequires:  libini_config-devel
@@ -28,13 +33,13 @@ gzip -9 libnfsidmap-regex.5
 %install
 cd %{work_name}
 rm -rf %{buildroot}
-mkdir -p  %{buildroot}/lib64/libnfsidmap/
+mkdir -p  %{buildroot}/usr/lib64/libnfsidmap/
 mkdir -p  %{buildroot}/usr/share/man/man5/
-cp .libs/regex.so %{buildroot}/lib64/libnfsidmap/
+cp .libs/regex.so %{buildroot}/usr/lib64/libnfsidmap/
 cp libnfsidmap-regex.5.gz %{buildroot}/usr/share/man/man5/
 
 %files
-/lib64/libnfsidmap/regex.so
+/usr/lib64/libnfsidmap/regex.so
 /usr/share/man/man5/libnfsidmap-regex.5.gz
 
 %changelog
