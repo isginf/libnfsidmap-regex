@@ -173,7 +173,7 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
     char *staticgroup;
     char *groupname;
     size_t namelen;
-	int err;
+	int err = 0;
 	int index;
     int status;
     regmatch_t matches[MAX_MATCHES];
