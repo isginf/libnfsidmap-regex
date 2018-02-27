@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_PREREQ([2.66])
+AC_PREREQ([2.63])
 AC_CONFIG_MACRO_DIR([m4])
 AC_INIT([libnfsidmap-regex],[0.1],[stefan.walter@inf.ethz.ch])
 AM_INIT_AUTOMAKE
