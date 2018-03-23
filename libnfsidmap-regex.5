@@ -64,6 +64,11 @@ Constant string that is prepended to a local group name when converting it to an
 
 This allows to organize the group name space in a central directory that is used for a central NFS4 server and use short group names in the local directory used in organizational units.
 .TP
+.B Group-Name-No-Prefix-Regex
+Regular expression to exclude groups from adding and removing the prefix set by Group-Name-Prefix. The regular expression must match both the remote and local group names.
+
+(Default: none)
+.TP
 .B Group-Map-File
 File name of an INI style file containing static group mappings.
 
@@ -115,6 +120,7 @@ Append-After-User = @EXAMPLE.ORG
 #Prepend-Before-Group = 
 Append-After-Group = @example.org@example.org
 Group-Name-Prefix = sales-
+Group-Name-No-Prefix-Regex = -group$
 
 [Groups]
 domain users = users

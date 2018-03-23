@@ -54,6 +54,8 @@ struct ini_cfgobj * dict;
 
 regex_t group_re;
 regex_t user_re;
+regex_t gpx_re;
+int use_gpx;
 char * group_prefix;
 char * group_name_prefix;
 char * group_suffix;
@@ -232,8 +234,19 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
         groupname = localgroup;
     	if (group_name_prefix_length && ! strncmp(group_name_prefix, localgroup, group_name_prefix_length))
 		{
-        	IDMAP_LOG(4, ("regexp_getgrnam: removing prefix '%s' (%d long) from group '%s'", group_name_prefix, group_name_prefix_length, localgroup));
-			groupname += group_name_prefix_length;
+            err = 1;
+            if (use_gpx)
+	            err = regexec(&gpx_re, localgroup, 0, NULL, 0);
+
+            if (err)
+            {
+            	IDMAP_LOG(4, ("regexp_getgrnam: removing prefix '%s' (%d long) from group '%s'", group_name_prefix, group_name_prefix_length, localgroup));
+				groupname += group_name_prefix_length;
+            }
+            else
+            {
+            	IDMAP_LOG(4, ("regexp_getgrnam: not removing prefix from group '%s'", localgroup));
+            }
 		}
     }
 
@@ -445,8 +458,22 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
 	{
 		groupname = gr->gr_name;
     	name_prefix = group_name_prefix;
-    	if (group_name_prefix_length && ! strncmp(group_name_prefix, gr->gr_name, group_name_prefix_length))
-			name_prefix = &empty;
+    	if (group_name_prefix_length)
+        {
+            if(! strncmp(group_name_prefix, groupname, group_name_prefix_length))
+            {
+			    name_prefix = &empty;
+            }
+            else if (use_gpx)
+            {
+	            err = regexec(&gpx_re, groupname, 0, NULL, 0);
+	            if (!err)
+                {
+   			        IDMAP_LOG(4, ("regex_gid_to_name: not adding prefix to group '%s'", groupname));
+			        name_prefix = &empty;
+                }
+            }
+        }
 	}
       
 	err = write_name(name, groupname, name_prefix, group_prefix, group_suffix, len);
@@ -534,19 +561,39 @@ static int regex_init() {
         group_map_section = conf_section;
     }
 
+	string = conf_get_str("Regex", "Group-Name-No-Prefix-Regex");
+    use_gpx = 0;
+	if (string)
+	{
+        status = regcomp(&gpx_re, string, REG_EXTENDED|REG_ICASE); 
+
+        if (status)
+        {
+	    	warnx("regex_init: compiling regex for group prefix exclusion failed with status %u", status);
+		    goto error3;
+        }
+
+        use_gpx = 1;
+    }
+
     if (ini_config_create(&dict))
-        goto error2;
-    if (ini_config_file_open(group_map_file, 0, &dict_file))
-        goto error3;
-    if (ini_config_parse(dict_file, INI_STOP_ON_ERROR, INI_MV1S_ALLOW, 0, dict))
         goto error4;
+    if (ini_config_file_open(group_map_file, 0, &dict_file))
+        goto error5;
+    if (ini_config_parse(dict_file, INI_STOP_ON_ERROR, INI_MV1S_ALLOW, 0, dict))
+        goto error6;
  
 	return 0;
 
-error4:
+error6:
     ini_config_file_destroy(dict_file);
-error3:
+error5:
     ini_config_destroy(dict);
+error4:
+	if (use_gpx)
+        regfree(&gpx_re);
+error3:
+	regfree(&group_re);
 error2:
 	regfree(&user_re);
 error1:
