@@ -1,0 +1,3 @@
+shlibs:Depends=libc6 (>= 2.14), libini-config5 (>= 0.4.0), libnfsidmap2
+misc:Depends=
+misc:Pre-Depends=

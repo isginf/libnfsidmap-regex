@@ -1,0 +1,11 @@
+libnfsidmap-regex (0+git20180326-1) unstable; urgency=medium
+
+  * Added feature to exclude groups from prefix add/remove.
+
+ -- Manuel Mästinger <mamanuel@inf.ethz.ch>  Mon, 26 Mar 2018 11:27:10 +0200
+
+libnfsidmap-regex (0+git20180223-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #)
+
+ -- Gürkan Myczko <gurkan@phys.ethz.ch>  Fri, 23 Feb 2018 07:18:10 +0100
