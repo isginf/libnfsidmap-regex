@@ -6,7 +6,7 @@ Version:        %{build_timestamp}
 Release:        1
 License:        BSD
 Url:            https://github.com/isginf/libnfsidmap-regex
-BuildRequires:  coreutils git
+BuildRequires:  coreutils git libnfsidmap-devel
 BuildRequires:  libtool automake autoconf libini_config-devel
 Requires:       libini_config
 Summary:        libnfsidmap plugin using regex based mapping
