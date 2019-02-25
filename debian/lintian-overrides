@@ -1,3 +1,0 @@
-package-name-doesnt-match-sonames regex
-shlib-without-versioned-soname usr/lib/*/regex.so regex.so
-package-must-activate-ldconfig-trigger usr/lib/*/regex.so
