@@ -62,7 +62,7 @@ Constant string to put before a local group name when building an NFSv4 name.
 .B Group-Name-Prefix
 Constant string that is prepended to a local group name when converting it to an NFSv4 name. If an NFSv4 group name has this prefix it is removed when converting it to a local group name. IS not applied if a static group mapping matches.
 
-This allows to organize the group name space in a central directory that is used for a central NFS4 server and use short group names in the local directory used in organizational units.
+This allows one to organize the group name space in a central directory that is used for a central NFS4 server and use short group names in the local directory used in organizational units.
 .TP
 .B Group-Name-No-Prefix-Regex
 Regular expression to exclude groups from adding and removing the prefix set by Group-Name-Prefix. The regular expression must match both the remote and local group names.
