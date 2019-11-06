@@ -33,6 +33,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +47,7 @@
 
 #include "nfsidmap.h"
 #include "nfsidmap_internal.h"
+
 
 #define MAX_MATCHES 100
 
@@ -87,6 +89,8 @@ static char *get_default_domain(void)
         }
         return default_domain;
 }
+
+extern char *conf_get_str(char *, char *);
 
 /*
  * Regexp Translation Methods
@@ -497,7 +501,8 @@ static int regex_init() {
 	char *string;
 	int status;
 
-	string = nfsidmap_config_get("Regex", "User-Regex");
+
+        string = conf_get_str("Regex", "User-Regex");
 	if (!string)
 	{
 		warnx("regex_init: regex for user mapping missing");
@@ -511,7 +516,7 @@ static int regex_init() {
 		goto error1;
     }
 
-	string = nfsidmap_config_get("Regex", "Group-Regex");
+	string = conf_get_str("Regex", "Group-Regex");
 	if (!string)
 	{
 		warnx("regex_init: regex for group mapping missing");
@@ -525,50 +530,50 @@ static int regex_init() {
 		goto error2;
     }
 
-	group_name_prefix = nfsidmap_config_get("Regex", "Group-Name-Prefix");
+	group_name_prefix = conf_get_str("Regex", "Group-Name-Prefix");
     if (!group_name_prefix)
     {
         group_name_prefix = &empty;
     }
     group_name_prefix_length = strlen(group_name_prefix);
 
-    user_prefix = nfsidmap_config_get("Regex", "Prepend-Before-User");
+    user_prefix = conf_get_str("Regex", "Prepend-Before-User");
     if (!user_prefix)
     {
         user_prefix = &empty;
     }
 
-    user_suffix = nfsidmap_config_get("Regex", "Append-After-User"); 
+    user_suffix = conf_get_str("Regex", "Append-After-User"); 
     if (!user_suffix)
     {
         user_suffix = &empty;
     }
 
-    group_prefix = nfsidmap_config_get("Regex", "Prepend-Before-Group"); 
+    group_prefix = conf_get_str("Regex", "Prepend-Before-Group"); 
     if (!group_prefix)
     {
         group_prefix = &empty;
     }
 
-    group_suffix = nfsidmap_config_get("Regex", "Append-After-Group"); 
+    group_suffix = conf_get_str("Regex", "Append-After-Group"); 
     if (!group_suffix)
     {
         group_suffix = &empty;
     }
 
-    group_map_file = nfsidmap_config_get("Regex", "Group-Map-File"); 
+    group_map_file = conf_get_str("Regex", "Group-Map-File"); 
     if (!group_map_file)
     {
         group_map_file = conf_file;
     }
 
-    group_map_section = nfsidmap_config_get("Regex", "Group-Map-Section"); 
+    group_map_section = conf_get_str("Regex", "Group-Map-Section"); 
     if (!group_map_section)
     {
         group_map_section = conf_section;
     }
 
-	string = nfsidmap_config_get("Regex", "Group-Name-No-Prefix-Regex");
+	string = conf_get_str("Regex", "Group-Name-No-Prefix-Regex");
     use_gpx = 0;
 	if (string)
 	{
@@ -604,7 +609,8 @@ error3:
 error2:
 	regfree(&user_re);
 error1:
-	return -EINVAL;
+	return 0;
+ /* return -EINVAL; */
 }
 
 
