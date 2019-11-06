@@ -12,6 +12,9 @@ AC_PROG_CC
 AC_HEADER_STDC
 AC_CHECK_HEADERS([nfsidmap.h stdlib.h string.h unistd.h errno.h])
 
+AC_CHECK_HEADERS([nfsidmap_internal.h], [], [])
+AC_CHECK_HEADERS([nfsidmap_plugin.h], [], [])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T
 AC_TYPE_SIZE_T

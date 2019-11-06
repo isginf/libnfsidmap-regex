@@ -45,7 +45,12 @@
 #include <ini_configobj.h>
 
 #include "nfsidmap.h"
+#ifdef HAVE_NFSIDMAP_INTERNAL_H
 #include "nfsidmap_internal.h"
+#endif
+#ifdef HAVE_NFSIDMAP_PLUGIN_H
+#include "nfsidmap_plugin.h"
+#endif
 
 #define MAX_MATCHES 100
 
