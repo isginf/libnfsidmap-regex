@@ -175,14 +175,12 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
 	struct grbuf *buf;
 	size_t buflen = sysconf(_SC_GETGR_R_SIZE_MAX);
 	char *localgroup;
-    char *staticgroup;
     char *groupname;
     size_t namelen;
 	int err = 0;
 	int index;
     int status;
     regmatch_t matches[MAX_MATCHES];
-    struct value_obj * vo;
 
 	buf = malloc(sizeof(*buf) + buflen);
 	if (!buf) {
@@ -396,12 +394,7 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
     const char *name_prefix;
 	size_t buflen = sysconf(_SC_GETGR_R_SIZE_MAX);
 	int err;
-    int index;
-    int count;
-    char ** keys;
-    char * value;
     char * groupname = NULL;
-    struct value_obj * vo;
 
 	do {
 		err = -ENOMEM;
