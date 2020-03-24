@@ -9,9 +9,6 @@ The  regex  plugin  parses  NFSv4  user and groups names using regex to
 extract the local user or group. NFSv4 names are created by adding constant
 strings before and after the local user and group names.
 
-It  additionally  supports  an additional configuration file for static
-group mappings.
-
 ## CONFIGURATION
 The configuration for the  plugin  is  in  a  new  `[Regex]`  section  in
 `/etc/idmapd.conf` that may contain lines of the form
@@ -26,6 +23,7 @@ The recognized variables are as follows:
 Regular  expression  that  extracts  the local user name from an
 NFSv4 name. Several expressions can be  concatenated  with  '|'.
 The first match will be used.
+
 
 #### Group-Regex
 Regular  expression  that  extracts the local group name from an

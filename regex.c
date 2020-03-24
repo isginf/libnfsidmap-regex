@@ -33,6 +33,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,15 +43,11 @@
 #include <errno.h>
 #include <err.h>
 #include <regex.h>
-#include <ini_configobj.h>
 
 #include "nfsidmap.h"
 #include "nfsidmap_internal.h"
 
 #define MAX_MATCHES 100
-
-struct ini_cfgfile *  dict_file;
-struct ini_cfgobj * dict;
 
 regex_t group_re;
 regex_t user_re;
@@ -65,9 +62,6 @@ const char * group_map_file;
 const char * group_map_section;
 char empty = '\0';
 size_t group_name_prefix_length;
-
-static char * conf_file = "/etc/idmapd.conf";
-static char * conf_section = "groups";
 
 struct pwbuf {
         struct passwd pwbuf;
@@ -88,6 +82,8 @@ static char *get_default_domain(void)
         return default_domain;
 }
 
+extern char *conf_get_str(char *, char *);
+
 /*
  * Regexp Translation Methods
  *
@@ -100,11 +96,11 @@ static struct passwd *regex_getpwnam(const char *name, const char *domain,
 	struct pwbuf *buf;
 	size_t buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
 	char *localname;
-    size_t namelen;
+	size_t namelen;
 	int err;
-    int status;
-    int index;
-    regmatch_t matches[MAX_MATCHES];
+	int status;
+	int index;
+	regmatch_t matches[MAX_MATCHES];
 
 	buf = malloc(sizeof(*buf) + buflen);
 	if (!buf) {
@@ -119,11 +115,11 @@ static struct passwd *regex_getpwnam(const char *name, const char *domain,
 		goto err_free_buf;
 	}
 
-    for (index = 1; index < MAX_MATCHES ; index++)
-    {
-       if (matches[index].rm_so >= 0)
-           break;
-    }
+	for (index = 1; index < MAX_MATCHES ; index++)
+	{
+		if (matches[index].rm_so >= 0)
+			break;
+	}
 
 	if (index == MAX_MATCHES) {
 		IDMAP_LOG(4, ("regexp_getpwnam: user '%s' did not match regex", name));
@@ -131,15 +127,15 @@ static struct passwd *regex_getpwnam(const char *name, const char *domain,
 		goto err_free_buf;
 	}
 
-    namelen = matches[index].rm_eo - matches[index].rm_so;
-    localname= malloc(namelen + 1);
-    if (!localname)
-    {
+	namelen = matches[index].rm_eo - matches[index].rm_so;
+	localname= malloc(namelen + 1);
+	if (!localname)
+	{
 		err = ENOMEM;
 		goto err_free_buf;
-    }
-    strncpy(localname, name+matches[index].rm_so, namelen);
-    localname[namelen] = '\0';
+	}
+	strncpy(localname, name+matches[index].rm_so, namelen);
+	localname[namelen] = '\0';
 
 again:
 	err = getpwnam_r(localname, &buf->pwbuf, buf->buf, buflen, &pw);
@@ -223,21 +219,8 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
     strncpy(localgroup, name+matches[index].rm_so, namelen);
     localgroup[namelen] = '\0';
 
-	IDMAP_LOG(4, ("regexp_getgrnam: group '%s' after match of regex", localgroup));
+    IDMAP_LOG(4, ("regexp_getgrnam: group '%s' after match of regex", localgroup));
 
-    if (ini_get_config_valueobj(group_map_section, localgroup, dict,  INI_GET_FIRST_VALUE, &vo))
-       goto err_free_buf;
-    staticgroup = ini_get_string_config_value(vo, NULL);
-
-    if (staticgroup)
-    {
-        IDMAP_LOG(4, ("regexp_getgrnam: group '%s' matched static group '%s'", localgroup, staticgroup));
-
-        free(localgroup);
-        groupname = localgroup = staticgroup;
-    }
-    else
-    {
         groupname = localgroup;
     	if (group_name_prefix_length && ! strncmp(group_name_prefix, localgroup, group_name_prefix_length))
 		{
@@ -254,10 +237,9 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
             {
             	IDMAP_LOG(4, ("regexp_getgrnam: not removing prefix from group '%s'", localgroup));
             }
-		}
     }
 
-   	IDMAP_LOG(4, ("regexp_getgrnam: will use '%s'", groupname));
+    IDMAP_LOG(4, ("regexp_getgrnam: will use '%s'", groupname));
 
 again:
 	err = getgrnam_r(groupname, &buf->grbuf, buf->buf, buflen, &gr);
@@ -438,32 +420,7 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
 	if (err)
 		goto out_buf;
 
-    keys = ini_get_attribute_list(dict, group_map_section, &count, &err);
-    if (err)
-        goto out_buf;
-
-    for (index = 0; index < count; index++)
-    {
-        if (ini_get_config_valueobj(group_map_section, keys[index], dict,  INI_GET_FIRST_VALUE, &vo))
-            goto out_ini;
-        value = ini_get_string_config_value(vo, NULL);
-        if (value != NULL && ! strcmp(gr->gr_name,value) )
-        {
-            free(value);
-   			groupname = keys[index];
-   			IDMAP_LOG(4, ("regex_gid_to_name: match '%s' -> '%s'", gr->gr_name, groupname));
-            break;
-        }
-        free(value);
-    } 
-    
-    if (groupname)
-	{
-		name_prefix = &empty;
-	}
-	else
-	{
-		groupname = gr->gr_name;
+	groupname = gr->gr_name;
     	name_prefix = group_name_prefix;
     	if (group_name_prefix_length)
         {
@@ -480,13 +437,10 @@ static int regex_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
 			        name_prefix = &empty;
                 }
             }
-        }
 	}
       
 	err = write_name(name, groupname, name_prefix, group_prefix, group_suffix, len);
 
-out_ini:
-    ini_free_attribute_list(keys);
 out_buf:
 	free(buf);
 out:
@@ -497,7 +451,8 @@ static int regex_init() {
 	char *string;
 	int status;
 
-	string = nfsidmap_config_get("Regex", "User-Regex");
+
+        string = conf_get_str("Regex", "User-Regex");
 	if (!string)
 	{
 		warnx("regex_init: regex for user mapping missing");
@@ -511,7 +466,7 @@ static int regex_init() {
 		goto error1;
     }
 
-	string = nfsidmap_config_get("Regex", "Group-Regex");
+	string = conf_get_str("Regex", "Group-Regex");
 	if (!string)
 	{
 		warnx("regex_init: regex for group mapping missing");
@@ -525,53 +480,41 @@ static int regex_init() {
 		goto error2;
     }
 
-	group_name_prefix = nfsidmap_config_get("Regex", "Group-Name-Prefix");
+	group_name_prefix = conf_get_str("Regex", "Group-Name-Prefix");
     if (!group_name_prefix)
     {
         group_name_prefix = &empty;
     }
     group_name_prefix_length = strlen(group_name_prefix);
 
-    user_prefix = nfsidmap_config_get("Regex", "Prepend-Before-User");
+    user_prefix = conf_get_str("Regex", "Prepend-Before-User");
     if (!user_prefix)
     {
         user_prefix = &empty;
     }
 
-    user_suffix = nfsidmap_config_get("Regex", "Append-After-User"); 
+    user_suffix = conf_get_str("Regex", "Append-After-User"); 
     if (!user_suffix)
     {
         user_suffix = &empty;
     }
 
-    group_prefix = nfsidmap_config_get("Regex", "Prepend-Before-Group"); 
+    group_prefix = conf_get_str("Regex", "Prepend-Before-Group"); 
     if (!group_prefix)
     {
         group_prefix = &empty;
     }
 
-    group_suffix = nfsidmap_config_get("Regex", "Append-After-Group"); 
+    group_suffix = conf_get_str("Regex", "Append-After-Group"); 
     if (!group_suffix)
     {
         group_suffix = &empty;
     }
 
-    group_map_file = nfsidmap_config_get("Regex", "Group-Map-File"); 
-    if (!group_map_file)
-    {
-        group_map_file = conf_file;
-    }
-
-    group_map_section = nfsidmap_config_get("Regex", "Group-Map-Section"); 
-    if (!group_map_section)
-    {
-        group_map_section = conf_section;
-    }
-
-	string = nfsidmap_config_get("Regex", "Group-Name-No-Prefix-Regex");
+    string = conf_get_str("Regex", "Group-Name-No-Prefix-Regex");
     use_gpx = 0;
-	if (string)
-	{
+    if (string)
+    {
         status = regcomp(&gpx_re, string, REG_EXTENDED|REG_ICASE); 
 
         if (status)
@@ -583,28 +526,15 @@ static int regex_init() {
         use_gpx = 1;
     }
 
-    if (ini_config_create(&dict))
-        goto error4;
-    if (ini_config_file_open(group_map_file, 0, &dict_file))
-        goto error5;
-    if (ini_config_parse(dict_file, INI_STOP_ON_ERROR, INI_MV1S_ALLOW, 0, dict))
-        goto error6;
- 
-	return 0;
+    return 0;
 
-error6:
-    ini_config_file_destroy(dict_file);
-error5:
-    ini_config_destroy(dict);
-error4:
-	if (use_gpx)
-        regfree(&gpx_re);
 error3:
 	regfree(&group_re);
 error2:
 	regfree(&user_re);
 error1:
-	return -EINVAL;
+	return 0;
+ /* return -EINVAL; */
 }
 
 
