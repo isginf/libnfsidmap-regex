@@ -3,7 +3,7 @@
  *
  *  idmapping functions using regex for gss principals.
  *
- *  Copyright (c) 2017 Stefan Walter <stefan.walter@inf.ethz.ch>.
+ *  Copyright (c) 2017-2020 Stefan Walter <stefan.walter@inf.ethz.ch>.
  *  Copyright (c) 2008 David Härdeman <david@hardeman.nu>.
  *  All rights reserved.
  *
@@ -45,7 +45,22 @@
 #include <regex.h>
 
 #include "nfsidmap.h"
+
+#ifdef HAVE_NFSIDMAP_INTERNAL_H
 #include "nfsidmap_internal.h"
+#endif
+#ifdef HAVE_NFSIDMAP_PLUGIN_H
+#include "nfsidmap_plugin.h"
+#endif
+
+#ifdef HAVE_DECL_NFSIDMAP_CONFIG_GET
+#define CONFIG_GET_STRING nfsidmap_config_get
+extern const char *nfsidmap_config_get(const char *, const char *);
+#endif
+#ifdef HAVE_DECL_CONF_GET_STR
+#define CONFIG_GET_STRING conf_get_str
+extern char *conf_get_str(char *, char *);
+#endif
 
 #define MAX_MATCHES 100
 
@@ -81,8 +96,6 @@ static char *get_default_domain(void)
         }
         return default_domain;
 }
-
-extern char *conf_get_str(char *, char *);
 
 /*
  * Regexp Translation Methods
@@ -175,12 +188,12 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
 	struct grbuf *buf;
 	size_t buflen = sysconf(_SC_GETGR_R_SIZE_MAX);
 	char *localgroup;
-    char *groupname;
-    size_t namelen;
+	char *groupname;
+	size_t namelen;
 	int err = 0;
 	int index;
-    int status;
-    regmatch_t matches[MAX_MATCHES];
+	int status;
+	regmatch_t matches[MAX_MATCHES];
 
 	buf = malloc(sizeof(*buf) + buflen);
 	if (!buf) {
@@ -195,11 +208,11 @@ static struct group *regex_getgrnam(const char *name, const char *domain,
 		goto err_free_buf;
 	}
 
-    for (index = 1; index < MAX_MATCHES ; index++)
-    {
-       if (matches[index].rm_so >= 0)
-           break;
-    }
+	for (index = 1; index < MAX_MATCHES ; index++)
+	{
+		if (matches[index].rm_so >= 0)
+			break;
+	}
 
 	if (index == MAX_MATCHES) {
 		IDMAP_LOG(4, ("regexp_getgrnam: group '%s' did not match regex", name));
@@ -441,25 +454,25 @@ out:
 }
 
 static int regex_init() {	
-	char *string;
+	const char *string;
 	int status;
 
 
-        string = conf_get_str("Regex", "User-Regex");
+        string = CONFIG_GET_STRING("Regex", "User-Regex");
 	if (!string)
 	{
 		warnx("regex_init: regex for user mapping missing");
 		goto error1;
 	}
     
-    status = regcomp(&user_re, string, REG_EXTENDED|REG_ICASE); 
-    if (status)
-    {
+	status = regcomp(&user_re, string, REG_EXTENDED|REG_ICASE); 
+	if (status)
+	{
 		warnx("regex_init: compiling regex for user mapping failed with status %u", status);
 		goto error1;
-    }
+	}
 
-	string = conf_get_str("Regex", "Group-Regex");
+	string = CONFIG_GET_STRING("Regex", "Group-Regex");
 	if (!string)
 	{
 		warnx("regex_init: regex for group mapping missing");
@@ -473,38 +486,38 @@ static int regex_init() {
 		goto error2;
     }
 
-	group_name_prefix = conf_get_str("Regex", "Group-Name-Prefix");
+	group_name_prefix = CONFIG_GET_STRING("Regex", "Group-Name-Prefix");
     if (!group_name_prefix)
     {
         group_name_prefix = &empty;
     }
     group_name_prefix_length = strlen(group_name_prefix);
 
-    user_prefix = conf_get_str("Regex", "Prepend-Before-User");
+    user_prefix = CONFIG_GET_STRING("Regex", "Prepend-Before-User");
     if (!user_prefix)
     {
         user_prefix = &empty;
     }
 
-    user_suffix = conf_get_str("Regex", "Append-After-User"); 
+    user_suffix = CONFIG_GET_STRING("Regex", "Append-After-User"); 
     if (!user_suffix)
     {
         user_suffix = &empty;
     }
 
-    group_prefix = conf_get_str("Regex", "Prepend-Before-Group"); 
+    group_prefix = CONFIG_GET_STRING("Regex", "Prepend-Before-Group"); 
     if (!group_prefix)
     {
         group_prefix = &empty;
     }
 
-    group_suffix = conf_get_str("Regex", "Append-After-Group"); 
+    group_suffix = CONFIG_GET_STRING("Regex", "Append-After-Group"); 
     if (!group_suffix)
     {
         group_suffix = &empty;
     }
 
-    string = conf_get_str("Regex", "Group-Name-No-Prefix-Regex");
+    string = CONFIG_GET_STRING("Regex", "Group-Name-No-Prefix-Regex");
     use_gpx = 0;
     if (string)
     {

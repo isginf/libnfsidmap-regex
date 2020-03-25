@@ -8,7 +8,7 @@ License:        BSD
 Url:            https://github.com/isginf/libnfsidmap-regex
 BuildRequires:  coreutils git libnfsidmap-devel
 BuildRequires:  libtool automake autoconf
-Summary:        libnfsidmap plugin using regex based mapping
+Summary:        libnfsidmap plugin using regex based mapping of ids
 %description
 The regex plugin parses NFSv4 user and groups names using regex to extract the local user or group. NFSv4 names are created by adding constant strings before and after the local user and group names.
 
