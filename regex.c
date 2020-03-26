@@ -46,18 +46,21 @@
 
 #include "nfsidmap.h"
 
-#ifdef HAVE_NFSIDMAP_INTERNAL_H
+#if HAVE_NFSIDMAP_INTERNAL_H
 #include "nfsidmap_internal.h"
-#endif
-#ifdef HAVE_NFSIDMAP_PLUGIN_H
+#elif HAVE_NFSIDMAP_PLUGIN_H
 #include "nfsidmap_plugin.h"
+#else
+#include "builtin_nfsidmap_internal.h"
 #endif
 
-#ifdef HAVE_DECL_NFSIDMAP_CONFIG_GET
+#if HAVE_DECL_NFSIDMAP_CONFIG_GET
 #define CONFIG_GET_STRING nfsidmap_config_get
 extern const char *nfsidmap_config_get(const char *, const char *);
-#endif
-#ifdef HAVE_DECL_CONF_GET_STR
+#elif HAVE_DECL_CONF_GET_STR
+#define CONFIG_GET_STRING conf_get_str
+extern char *conf_get_str(char *, char *);
+#else
 #define CONFIG_GET_STRING conf_get_str
 extern char *conf_get_str(char *, char *);
 #endif
